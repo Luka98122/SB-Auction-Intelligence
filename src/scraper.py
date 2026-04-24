@@ -1,35 +1,82 @@
+import requests
 import mysql.connector
 import os
 import time
+from datetime import datetime
 
-def connect_to_db():
-    # Fetch credentials from environment variables
-    db_config = {
-        'host': os.getenv("DB_HOST", "db"),
-        'user': os.getenv("DB_USER"),
-        'password': os.getenv("DB_PASSWORD"),
-        'database': os.getenv("DB_NAME")
-    }
+# --- Database Connection ---
+def get_db_connection():
+    while True:
+        try:
+            return mysql.connector.connect(
+                host=os.getenv("DB_HOST", "db"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+        except mysql.connector.Error as err:
+            print(f"Database not ready: {err}. Retrying in 5s...")
+            time.sleep(5)
+
+# --- Main Polling Loop ---
+def run_scraper():
+    db = get_db_connection()
+    cursor = db.cursor()
+    ended_url = "https://api.hypixel.net/v2/skyblock/auctions_ended"
+
+    # INSERT IGNORE safely handles overlap between 60-second polling windows
+    insert_query = """
+    INSERT IGNORE INTO auctions (auction_uuid, seller_uuid, buyer_uuid, final_price, bin, end_time, item_bytes)
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    """
+
+    print("SB-Auction-Intelligence: Raw ELT Pipeline Started.")
 
     while True:
         try:
-            print("Attempting to connect to the MySQL database...")
-            conn = mysql.connector.connect(**db_config)
-            if conn.is_connected():
-                print("Successfully connected to the database.")
-                return conn
-        except mysql.connector.Error as err:
-            print(f"Database not ready yet: {err}")
-            print("Retrying in 5 seconds...")
-            time.sleep(5)
+            start_time = time.time()
+            response = requests.get(ended_url, timeout=10).json()
+            
+            if not response.get("success"):
+                print("API request failed, retrying...")
+                time.sleep(10)
+                continue
+
+            ended_auctions = response.get("auctions", [])
+            data_tuples = []
+
+            for a in ended_auctions:
+                # We only care about items that actually sold
+                if 'buyer' not in a: 
+                    continue 
+                
+                end_dt = datetime.fromtimestamp(a['timestamp'] / 1000.0)
+                
+                data_tuples.append((
+                    a['auction_id'],
+                    a['seller'],
+                    a['buyer'],
+                    a['price'],
+                    a.get('bin', False),
+                    end_dt,
+                    a['item_bytes']  # Storing the raw Base64 payload directly
+                ))
+
+            if data_tuples:
+                # Batch insert for high-speed I/O
+                cursor.executemany(insert_query, data_tuples)
+                db.commit()
+
+            # The ended API updates roughly every 60 seconds.
+            elapsed = time.time() - start_time
+            sleep_time = max(0, 60 - elapsed)
+            
+            print(f"Logged {len(data_tuples)} raw sales. Sleeping for {round(sleep_time)}s...")
+            time.sleep(sleep_time)
+
+        except Exception as e:
+            print(f"Error in polling loop: {e}")
+            time.sleep(10)
 
 if __name__ == "__main__":
-    db = connect_to_db()
-    
-    # Simple test query to prove it works
-    cursor = db.cursor()
-    cursor.execute("SHOW TABLES;")
-    print(f"Existing tables: {cursor.fetchall()}")
-    
-    cursor.close()
-    db.close()
+    run_scraper()
