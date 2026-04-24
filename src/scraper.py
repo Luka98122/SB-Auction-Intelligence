@@ -4,6 +4,12 @@ import os
 import time
 from datetime import datetime
 
+# Handy one liner to check the highest buyers:
+# export $(grep -v '^#' .env | xargs) && docker exec -it skyblock_mysql mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE -e "SELECT buyer_uuid, COUNT(*) AS count FROM auctions GROUP BY buyer_uuid ORDER BY count DESC LIMIT 3;"
+
+#Check the number of auctions collected:
+# docker exec -it skyblock_mysql mysql -u luka_dev -p skyblock_data -e "SELECT COUNT(*) FROM auctions;"
+
 # --- Database Connection ---
 def get_db_connection():
     while True:
