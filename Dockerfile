@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your code into the container
-COPY scraper.py .
+COPY src/scraper.py .
 
 # Command to run your scraper
 CMD ["python", "scraper.py"]
