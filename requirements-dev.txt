@@ -5,3 +5,5 @@ ipykernel
 tqdm
 matplotlib
 scikit-learn
+sqlalchemy
+dotenv
