@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: skyblock_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # This line runs your SQL setup script automatically on the first start:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  scraper:
+    build: .
+    container_name: skyblock_python_scraper
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+      - HYPIXEL_API_KEY=${HYPIXEL_API_KEY}
+
+volumes:
+  db_data:
