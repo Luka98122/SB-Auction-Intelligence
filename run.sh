@@ -11,7 +11,7 @@ if [ $? -eq 0 ]; then
     READABLE_TIME=$(date -d "$LAST_BUILD" "+%Y-%m-%d %H:%M:%S")
     echo "Last build of $IMAGE_NAME was: $READABLE_TIME"
     echo "Starting stack..."
-    docker compose up
+    nohup docker compose up
 else
     echo "Error: No existing build found for $IMAGE_NAME."
     echo "Run ./build.sh first to create the image."
