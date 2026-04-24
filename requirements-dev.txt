@@ -1,0 +1,7 @@
+pandas
+mysql-connector-python
+nbt
+ipykernel
+tqdm
+matplotlib
+scikit-learn
