@@ -8,3 +8,4 @@ scikit-learn
 sqlalchemy
 dotenv
 seaborn
+xgboost
