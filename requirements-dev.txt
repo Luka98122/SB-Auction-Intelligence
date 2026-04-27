@@ -10,3 +10,4 @@ dotenv
 seaborn
 xgboost
 pyarrow
+numba
