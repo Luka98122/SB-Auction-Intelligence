@@ -1,6 +1,6 @@
 # SB-Auction-Intelligence
 
-An integrated data engineering and machine learning pipeline designed to ingest, process, and analyze Hypixel Skyblock auction data. This project automates the transition from raw API responses to structured datasets suitable for deep learning and predictive modeling.
+An integrated data engineering and machine learning pipeline designed to ingest, process, and analyze Hypixel Skyblock auction data. This project automates the transition from raw API responses to structured datasets suitable for deep learning and predictive modeling. The dataset created for this project can be found [here](https://www.kaggle.com/datasets/luka98122/hypixel-skyblock-bin-auctions/data).
 
 ---
 
