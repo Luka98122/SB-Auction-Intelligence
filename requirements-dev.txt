@@ -11,3 +11,5 @@ seaborn
 xgboost
 pyarrow
 numba
+brotli
+fastparquet

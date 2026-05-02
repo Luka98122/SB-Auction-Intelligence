@@ -2,3 +2,4 @@
 .venv
 nohup.out
 models
+db_export
